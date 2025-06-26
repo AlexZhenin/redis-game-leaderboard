@@ -14,6 +14,7 @@
 
 ### Проверка кэша и запрос к "БД"
 - При получении данных пользователя сначала проверяется редис (кэш). Если данных нет, то имитируется запрос в БД. Примерно то же и для уровня.
+```
 def fetch_player_data_from_db(player_id):
     time.sleep(2)  """Имитируем задержку"""
 
@@ -50,9 +51,11 @@ def get_player_data(player_id):
         pipe.execute()
     print(f"Данные пользователя {player_id} закэшированы")
     return player_data
+```
 
 ### Код игрока
 - Игрок создается через hset с TTL 60 минут. При какой-либо активности таймер обновляется до 60 минут.
+```
 def create_player(player_id, name, email):
     """
     Создание профиля игрока.
@@ -70,10 +73,12 @@ def create_player(player_id, name, email):
         pipe.expire(f'user:{player_id}', timedelta(minutes=60))  # Устанавливаем TTL 60 минут
         pipe.execute()
     print(f"Игрок {player_id} создан.")
+```
 
 ### Код уровня и его обновления
 #### Код уровня
 - Создается через set и json.dumps с TTL 60 минут.
+```
 def add_level(level_id, name, difficulty='Medium', description=''):
     """Добавление уровня."""
     level_data = {
@@ -89,9 +94,11 @@ def add_level(level_id, name, difficulty='Medium', description=''):
         pipe.expire(f'level:{level_id}', timedelta(minutes=60))  # Устанавливаем TTL 60 минут
         pipe.execute()
     print(f"Уровень {level_id} добавлен.")
+```
 
 #### Обновление
 - Если уровень становится популярным (входит в топ-10 популярных уровней), то запускается данная функция и его TTL обновляется до 2 часов.
+```
 def update_level_cache(level_id, level_data):
     """
     Атомарно обновляет кэш данных уровня.
@@ -102,7 +109,7 @@ def update_level_cache(level_id, level_data):
         pipe.execute()
     #print(f"Кэш уровня {level_id} обновлен атомарно")
     redis_client.publish('cache', f"Обновление кэша для популярного уровня {level_id}")
-
+```
 
 ### Тесты
 - В testing.py попунктные тесты возможностей (CRUD, TTL, чат и подписки, достижения и т.п.)
